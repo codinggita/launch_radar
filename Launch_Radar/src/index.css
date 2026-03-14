@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --color-primary: #2b59ff;
+  --color-primary-hover: #1e40c1;
+  --color-bg-color: #f6f9fc;
+  --color-text-main: #1a1f36;
+  --color-text-muted: #697386;
+  --color-accent-purple: #7c3aed;
+  --color-accent-green: #10b981;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  @apply bg-[var(--color-bg-color)] text-[var(--color-text-main)] overflow-x-hidden antialiased;
+}
+
+
+@layer base {
+  h1, h2, h3, h4 {
+    @apply font-bold leading-tight;
+  }
+}
+
+@utility container {
+  @apply max-w-7xl mx-auto px-4 md:px-8;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center px-7 py-3 rounded-full font-bold text-[0.95rem] transition-all duration-300 cursor-pointer border-none no-underline;
+}
+
+@utility btn-primary {
+  @apply bg-primary text-white shadow-[0_4px_14px_0_rgba(43,89,255,0.3)] hover:bg-primary-hover hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(43,89,255,0.4)];
+}
+
+@utility btn-outline {
+  @apply bg-transparent border border-[#e3e8ee] text-text-main hover:bg-[#f7fafc] hover:border-[#cbd5e0];
+}
+
+@utility glass-card {
+  @apply bg-white/80 backdrop-blur-[10px] border border-white/40 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] rounded-[20px] transition-all duration-300 hover:-translate-y-1.25 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)];
+}
+
+@utility tag {
+  @apply inline-block px-3 py-1 rounded-full text-[0.75rem] font-semibold uppercase tracking-wider;
+}
+
+@utility tag-blue {
+  @apply bg-[#e0e7ff] text-[#4338ca];
+}
+
+@utility tag-purple {
+  @apply bg-[#f3e8ff] text-[#6d28d9];
+}
+
+@utility tag-green {
+  @apply bg-[#dcfce7] text-[#15803d];
+}
+
+@utility section-title {
+  @apply text-center mb-16;
+}
+
+@utility section-title-h2 {
+  @apply text-4xl mb-4;
+}
+
+@utility section-title-p {
+  @apply text-text-muted max-w-[600px] mx-auto;
+}
