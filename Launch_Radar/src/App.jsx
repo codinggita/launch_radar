@@ -1,6 +1,6 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { AppProvider } from './context/AppContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -104,10 +104,12 @@ function App() {
 }
 
 const AppWrapper = () => (
-  <Router>
-    <ScrollToTop />
-    <App />
-  </Router>
+  <AppProvider>
+    <Router>
+      <ScrollToTop />
+      <App />
+    </Router>
+  </AppProvider>
 );
 
 export default AppWrapper;

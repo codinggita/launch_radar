@@ -14,9 +14,11 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { cartCount, user } = useApp();
   
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -43,7 +45,7 @@ const Sidebar = () => {
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-[#0f172a] leading-tight">LaunchRadar</h1>
-            <p className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">Pro Analyst</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">{user.plan}</p>
           </div>
         </div>
       </div>
@@ -52,9 +54,14 @@ const Sidebar = () => {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => (
           <Link key={item.name} to={item.path}>
-            <div className={`sidebar-item ${isActive(item.path) ? 'sidebar-item-active' : ''}`}>
+            <div className={`sidebar-item ${isActive(item.path) ? 'sidebar-item-active' : ''} relative`}>
               <item.icon size={20} />
               <span className="font-semibold text-sm">{item.name}</span>
+              {item.name === 'Store' && cartCount > 0 && (
+                <span className="absolute right-4 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                  {cartCount}
+                </span>
+              )}
             </div>
           </Link>
         ))}

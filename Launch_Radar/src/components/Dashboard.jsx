@@ -14,6 +14,8 @@ import {
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import NotificationDropdown from './NotificationDropdown';
+import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { 
   BarChart, 
   Bar, 
@@ -36,6 +38,7 @@ const chartData = [
 ];
 
 const PredictionCard = ({ title, status, prob, date, image, type }) => {
+  const navigate = useNavigate();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseXSpring = useSpring(x);
@@ -89,7 +92,10 @@ const PredictionCard = ({ title, status, prob, date, image, type }) => {
             <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider mb-0.5">Launch Prob.</p>
             <span className="text-lg font-extrabold text-primary">{prob}%</span>
           </div>
-          <button className="px-4 py-2 bg-[#f1f5f9] text-[#1e293b] rounded-lg font-bold text-xs hover:bg-primary hover:text-white transition-colors">
+          <button 
+            onClick={() => navigate('/predictions')}
+            className="px-4 py-2 bg-[#f1f5f9] text-[#1e293b] rounded-lg font-bold text-xs hover:bg-primary hover:text-white transition-colors"
+          >
             Analyze
           </button>
         </div>
@@ -144,6 +150,7 @@ const itemVariants = {
 };
 
 const Dashboard = () => {
+  const { user, notificationsCount } = useApp();
   const [showNotifications, setShowNotifications] = useState(false);
 
   return (
@@ -170,9 +177,11 @@ const Dashboard = () => {
                 }`}
               >
                 <Bell size={22} className={showNotifications ? 'fill-white' : ''} />
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                  3
-                </span>
+                {notificationsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                    {notificationsCount}
+                  </span>
+                )}
               </button>
               <NotificationDropdown 
                 isOpen={showNotifications} 
@@ -181,12 +190,12 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-4 pl-4 border-l border-[#e2e8f0]">
               <div className="text-right">
-                <p className="text-sm font-black text-[#1e293b]">Alex Rivers</p>
-                <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Enterprise Elite</p>
+                <p className="text-sm font-black text-[#1e293b]">{user.name}</p>
+                <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">{user.plan}</p>
               </div>
               <div className="w-12 h-12 rounded-2xl border-2 border-white shadow-md overflow-hidden bg-slate-200">
                 <img 
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
+                  src={user.avatar} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />

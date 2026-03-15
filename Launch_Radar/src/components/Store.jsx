@@ -17,8 +17,18 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { useApp } from '../context/AppContext';
 
 const ProductCard = ({ product, index }) => {
+  const { addToCart } = useApp();
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    addToCart();
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -93,8 +103,19 @@ const ProductCard = ({ product, index }) => {
               ))}
            </div>
            
-           <button className="w-full py-4 bg-[#0f172a] text-white rounded-[18px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary transition-all active:scale-95 group">
-              <ShoppingCart size={18} className="group-hover:translate-x-1 transition-transform" /> Add to Cart
+           <button 
+             onClick={handleAddToCart}
+             className={`w-full py-4 rounded-[18px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all active:scale-95 group ${added ? 'bg-emerald-500 text-white' : 'bg-[#0f172a] text-white hover:bg-primary'}`}
+           >
+              {added ? (
+                <>
+                  <CheckCircle2 size={18} /> Added to Cart
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={18} className="group-hover:translate-x-1 transition-transform" /> Add to Cart
+                </>
+              )}
            </button>
         </div>
       </div>
@@ -103,6 +124,7 @@ const ProductCard = ({ product, index }) => {
 };
 
 const Store = () => {
+  const { cartCount, user } = useApp();
   const [loadCount, setLoadCount] = useState(4);
   const categories = ['All Products', 'Hardware', 'SaaS Platforms', 'AI Modules', 'Neural Gear'];
   
@@ -176,16 +198,20 @@ const Store = () => {
              <div className="flex items-center gap-6 pr-8 border-r border-[#e2e8f0]">
                 <button className="relative p-2 text-[#64748b] hover:text-primary transition-colors">
                    <ShoppingCart size={26} />
-                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">3</span>
+                   {cartCount > 0 && (
+                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                       {cartCount}
+                     </span>
+                   )}
                 </button>
              </div>
              <div className="flex items-center gap-4 bg-white p-1.5 pr-4 rounded-2xl border border-[#e2e8f0] shadow-sm cursor-pointer hover:border-primary transition-all">
                 <div className="w-10 h-10 bg-indigo-100 rounded-xl overflow-hidden border-2 border-white">
-                   <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=48&h=48&q=80" alt="User" />
+                   <img src={user.avatar} alt="User" />
                 </div>
                 <div>
-                   <h4 className="text-xs font-black text-[#1e293b] leading-none mb-1">Alex Rivera</h4>
-                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none italic">Pro Plan</p>
+                   <h4 className="text-xs font-black text-[#1e293b] leading-none mb-1">{user.name}</h4>
+                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none italic">{user.plan}</p>
                 </div>
              </div>
           </div>
@@ -210,7 +236,7 @@ const Store = () => {
            >
               <div>
                  <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em] mb-2 italic">Your Cart</p>
-                 <h4 className="text-xl font-black text-primary italic">3 Items • $1,249.00</h4>
+                 <h4 className="text-xl font-black text-primary italic">{cartCount} Items • ${ (cartCount * 299).toLocaleString() }.00</h4>
               </div>
               <Link to="/cart">
                 <button className="px-8 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl hover:shadow-primary/40 transition-all active:scale-95 group-hover:px-10">
