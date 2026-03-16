@@ -1,15 +1,44 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AppContext = createContext();
 
+const API_BASE_URL = 'http://localhost:5000/api';
+
 export const AppProvider = ({ children }) => {
-  const [cartCount, setCartCount] = useState(3);
-  const [notificationsCount, setNotificationsCount] = useState(3);
-  const [user, setUser] = useState({
-    name: 'Alex Rivers',
-    plan: 'Enterprise Elite',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+  const [cartCount, setCartCount] = useState(0);
+  const [notificationsCount, setNotificationsCount] = useState(0);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : {
+      name: 'Guest User',
+      plan: 'Free Tier',
+      avatar: ''
+    };
   });
+
+  useEffect(() => {
+    if (user && user.name !== 'Guest User' && user.name !== 'Loading...') {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userRes = await fetch(`${API_BASE_URL}/user`);
+        const userData = await userRes.json();
+        setUser(userData);
+
+        const countsRes = await fetch(`${API_BASE_URL}/counts`);
+        const countsData = await countsRes.json();
+        setCartCount(countsData.cartCount);
+        setNotificationsCount(countsData.notificationsCount);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const addToCart = () => setCartCount(prev => prev + 1);
   const clearNotifications = () => setNotificationsCount(0);

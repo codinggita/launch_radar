@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { 
   Search, 
@@ -152,6 +152,34 @@ const itemVariants = {
 const Dashboard = () => {
   const { user, notificationsCount } = useApp();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [predictions, setPredictions] = useState([]);
+  const [signals, setSignals] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [predRes, sigRes, anaRes] = await Promise.all([
+          fetch('http://localhost:5000/api/predictions'),
+          fetch('http://localhost:5000/api/signals'),
+          fetch('http://localhost:5000/api/analytics')
+        ]);
+
+        const [predData, sigData, anaData] = await Promise.all([
+          predRes.json(),
+          sigRes.json(),
+          anaRes.json()
+        ]);
+
+        setPredictions(predData);
+        setSignals(sigData);
+        setAnalytics(anaData);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#f6f9fc]">
@@ -232,20 +260,16 @@ const Dashboard = () => {
                   </Link>
                 </div>
                 <div className="grid grid-cols-2 gap-8">
-                  <PredictionCard 
-                    title="QuantumWatch Series 3"
-                    date="Q4 2024"
-                    prob="94"
-                    type="high"
-                    image="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
-                  />
-                  <PredictionCard 
-                    title="Zenith Fold Pro"
-                    date="Mid 2025"
-                    prob="68"
-                    type="spec"
-                    image="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
-                  />
+                  {predictions.map((pred) => (
+                    <PredictionCard 
+                      key={pred.id}
+                      title={pred.title}
+                      date={pred.date}
+                      prob={pred.prob}
+                      type={pred.type}
+                      image={pred.image}
+                    />
+                  ))}
                 </div>
               </motion.section>
 
@@ -258,30 +282,17 @@ const Dashboard = () => {
                   <h2 className="text-2xl font-black text-[#1e293b]">Live Brand Signals</h2>
                 </div>
                 <div className="bg-white rounded-3xl border border-[#eef2f6] shadow-xl shadow-slate-200/50 overflow-hidden divide-y divide-[#f1f5f9]">
-                  <BrandSignal 
-                    name="Terraform Apparel"
-                    description="Detected sustainable activewear trademark filing in US & EU."
-                    time="2h ago"
-                    icon={Zap}
-                    category="Apparel"
-                    color="bg-indigo-600"
-                  />
-                  <BrandSignal 
-                    name="Volt Mobility"
-                    description="Registration of 4 domain names relating to sub-10k EV charging."
-                    time="5h ago"
-                    icon={Zap}
-                    category="Mobility"
-                    color="bg-amber-500"
-                  />
-                  <BrandSignal 
-                    name="BioSynch Systems"
-                    description="LinkedIn hiring surge detected in 'Neural-Link' division."
-                    time="8h ago"
-                    icon={Zap}
-                    category="Health"
-                    color="bg-emerald-500"
-                  />
+                  {signals.map((signal) => (
+                    <BrandSignal 
+                      key={signal.id}
+                      name={signal.name}
+                      description={signal.description}
+                      time={signal.time}
+                      icon={Zap}
+                      category={signal.category}
+                      color={signal.color}
+                    />
+                  ))}
                   <div className="p-5 text-center bg-slate-50/50">
                     <button className="text-sm font-black text-[#64748b] hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto">
                       Access Unlimited Signal Feed <ChevronRight size={16} />
@@ -304,9 +315,9 @@ const Dashboard = () => {
                 </div>
                 <div className="h-48 w-full mb-8">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
+                    <BarChart data={analytics?.chartData || []}>
                       <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                        {chartData.map((entry, index) => (
+                        {(analytics?.chartData || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={index === 4 ? '#2b59ff' : '#eff6ff'} />
                         ))}
                       </Bar>
@@ -342,7 +353,7 @@ const Dashboard = () => {
               >
                 <div className="relative z-10 text-white">
                   <p className="text-xs font-black opacity-70 mb-2 uppercase tracking-widest">Active Predictions</p>
-                  <h3 className="text-5xl font-black mb-6">428</h3>
+                  <h3 className="text-5xl font-black mb-6">{analytics?.activePredictions || '...'}</h3>
                   <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest">
                     <TrendingUp size={14} /> +18 Today
                   </div>
@@ -353,11 +364,11 @@ const Dashboard = () => {
               {/* Accuracy Card */}
               <motion.div variants={itemVariants} className="bg-white p-8 rounded-3xl border border-[#eef2f6] shadow-xl shadow-slate-200/50 text-center">
                 <p className="text-xs font-black text-[#94a3b8] uppercase tracking-widest mb-2">Algorithm Accuracy</p>
-                <h3 className="text-5xl font-black text-[#1e293b] mb-4">89.2%</h3>
+                <h3 className="text-5xl font-black text-[#1e293b] mb-4">{analytics?.accuracy || '...'}%</h3>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: "89.2%" }}
+                    animate={{ width: `${analytics?.accuracy || 0}%` }}
                     transition={{ duration: 1.5, delay: 0.5 }}
                     className="h-full bg-primary rounded-full shadow-[0_0_15px_rgba(43,89,255,0.4)]"
                   />

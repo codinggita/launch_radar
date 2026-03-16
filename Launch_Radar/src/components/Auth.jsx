@@ -16,10 +16,50 @@ const Auth = () => {
     }
   }, [searchParams]);
 
-  const handleSubmit = (e) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate auth and redirect to dashboard
-    navigate('/dashboard');
+    setLoading(true);
+    setError('');
+
+    try {
+      const endpoint = mode === 'LOGIN' ? '/api/auth/login' : '/api/auth/signup';
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      // Success
+      localStorage.setItem('user', JSON.stringify(data));
+      window.location.href = '/dashboard'; // Force reload to refresh context
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
   
   // --- 3D Tilt Logic for the form card ---
@@ -94,6 +134,12 @@ const Auth = () => {
                   <p className="text-text-muted">Sign in to your account to continue</p>
                 </div>
 
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-bold rounded-xl animate-pulse">
+                    {error}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <button className="flex items-center justify-center gap-3 py-3 px-4 border border-black/5 rounded-xl hover:bg-slate-50 transition-all font-semibold text-sm">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
@@ -113,7 +159,15 @@ const Auth = () => {
                 <form className="space-y-5" onSubmit={handleSubmit}>
                   <div>
                     <label className="block text-sm font-bold text-text-main mb-2">Email Address</label>
-                    <input type="email" placeholder="name@company.com" className="w-full px-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none" />
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="name@company.com" 
+                      className="w-full px-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none" 
+                      required
+                    />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
@@ -121,9 +175,31 @@ const Auth = () => {
                        <a href="#" className="text-xs font-bold text-primary hover:underline">Forgot password?</a>
                     </div>
                     <div className="relative">
-                      <input type="password" placeholder="••••••••" className="w-full px-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none" />
-                      <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <input 
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="••••••••" 
+                        className="w-full px-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none" 
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors p-1"
+                      >
+                        {showPassword ? (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                          </svg>
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -134,9 +210,10 @@ const Auth = () => {
                   <motion.button 
                     whileHover={{ scale: 1.01, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-base mt-2"
+                    disabled={loading}
+                    className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Sign In to Dashboard
+                    {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
                   </motion.button>
                 </form>
 
@@ -157,6 +234,12 @@ const Auth = () => {
                   <h1 className="text-3xl font-extrabold text-[#111827] mb-2">Create Account</h1>
                   <p className="text-text-muted">Step into the future of tech discovery today.</p>
                 </div>
+
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-bold rounded-xl animate-pulse">
+                    {error}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <button className="flex items-center justify-center gap-3 py-3 px-4 border border-black/5 rounded-xl hover:bg-slate-50 transition-all font-semibold text-sm">
@@ -181,7 +264,15 @@ const Auth = () => {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                       </span>
-                      <input type="text" placeholder="John Doe" className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" />
+                      <input 
+                        type="text" 
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="John Doe" 
+                        className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" 
+                        required
+                      />
                     </div>
                   </div>
                   <div>
@@ -190,7 +281,15 @@ const Auth = () => {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                       </span>
-                      <input type="email" placeholder="name@company.com" className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" />
+                      <input 
+                        type="email" 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="name@company.com" 
+                        className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" 
+                        required
+                      />
                     </div>
                   </div>
                   <div>
@@ -199,9 +298,31 @@ const Auth = () => {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                       </span>
-                      <input type="password" placeholder="••••••••" className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" />
-                      <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      <input 
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="••••••••" 
+                        className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-black/5 bg-[#f9fafb] focus:bg-white focus:border-primary transition-all outline-none" 
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors p-1"
+                      >
+                        {showPassword ? (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                          </svg>
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -214,10 +335,11 @@ const Auth = () => {
                   <motion.button 
                     whileHover={{ scale: 1.01, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-base mt-2 flex items-center justify-center gap-2"
+                    disabled={loading}
+                    className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all text-base mt-2 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Create Account 
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    {loading ? 'Creating Account...' : 'Create Account'} 
+                    {!loading && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>}
                   </motion.button>
                 </form>
 
@@ -251,7 +373,7 @@ const Auth = () => {
             loop 
             muted 
             playsInline
-            preload="auto"
+            preload="metadata"
             onLoadedData={() => setVideoLoaded(true)}
             className={`w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? 'opacity-60' : 'opacity-0'}`}
           >

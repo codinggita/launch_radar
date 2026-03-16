@@ -1,11 +1,19 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const Stats = () => {
-  const stats = [
-    { label: 'STARTUPS TRACKED', value: '12.4k+', trend: '+12% this month', trendClass: 'text-accent-green' },
-    { label: 'AI ACCURACY', value: '94.2%', trend: 'Backtested results', trendClass: 'text-primary' },
-    { label: 'CAPITAL SPOTTED', value: '$2.1B+', trend: 'Early stage flow', trendClass: 'text-accent-green' },
-  ];
+  const [stats, setStats] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/landing')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.stats) setStats(data.stats);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (!stats || stats.length === 0) return <section className="py-12 md:py-16 bg-[#fcfdfe]"></section>;
 
   return (
     <section className="py-12 md:py-16 bg-[#fcfdfe]">

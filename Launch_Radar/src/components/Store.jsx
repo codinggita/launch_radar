@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -13,7 +13,8 @@ import {
   Filter,
   ChevronDown,
   RefreshCw,
-  Heart
+  Heart,
+  CheckCircle2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -126,62 +127,21 @@ const ProductCard = ({ product, index }) => {
 const Store = () => {
   const { cartCount, user } = useApp();
   const [loadCount, setLoadCount] = useState(4);
+  const [products, setProducts] = useState([]);
   const categories = ['All Products', 'Hardware', 'SaaS Platforms', 'AI Modules', 'Neural Gear'];
   
-  const products = [
-    {
-      name: 'NeuralPad X1',
-      price: '899.00',
-      category: 'Hardware',
-      type: 'Interface',
-      tag: 'Trending',
-      tagClass: 'bg-primary shadow-lg shadow-primary/30',
-      bgClass: 'bg-gradient-to-br from-orange-400 to-amber-500',
-      rating: 4.8,
-      reviews: 128,
-      demand: 82,
-      specs: [{ icon: Zap, label: 'A15 Quantum' }, { icon: Globe, label: '48H Life' }]
-    },
-    {
-      name: 'CloudPulse AI',
-      price: '49/mo',
-      category: 'SaaS',
-      type: 'Productivity',
-      tag: 'New Release',
-      tagClass: 'bg-emerald-500 shadow-lg shadow-emerald-500/30',
-      bgClass: 'bg-gradient-to-br from-teal-400 to-emerald-500',
-      rating: 4.9,
-      reviews: '3.4k',
-      demand: 94,
-      specs: [{ icon: Cpu, label: 'Infinite Scale' }, { icon: ShieldCheck, label: 'End-to-End' }]
-    },
-    {
-      name: 'Titan Core 9',
-      price: '2,499.00',
-      category: 'Infrastructure',
-      type: 'AI',
-      tag: 'Best Seller',
-      tagClass: 'bg-indigo-500 shadow-lg shadow-indigo-500/30',
-      bgClass: 'bg-gradient-to-br from-slate-600 to-slate-800',
-      rating: 4.7,
-      reviews: 42,
-      demand: 68,
-      specs: [{ icon: Zap, label: '120 TFLOPS' }, { icon: RefreshCw, label: 'Liquid Cooled' }]
-    },
-    {
-      name: 'Optic V2 Pro',
-      price: '1,200.00',
-      category: 'Hardware',
-      type: 'Vision',
-      tag: 'Staff Pick',
-      tagClass: 'bg-rose-500 shadow-lg shadow-rose-500/30',
-      bgClass: 'bg-gradient-to-br from-slate-800 to-indigo-950',
-      rating: 4.9,
-      reviews: 892,
-      demand: 76,
-      specs: [{ icon: Globe, label: '8K Per Eye' }, { icon: Zap, label: 'Spatial Audio' }]
-    }
-  ];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
