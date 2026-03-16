@@ -454,5 +454,37 @@
         "icon": "BarChart3"
       }
     ]
-  }
+  },
+  "notifications": [
+    {
+      "id": 1,
+      "type": "LAUNCHES",
+      "title": "New Brand Launch: NovaTech just unveiled AI Smart Glasses for 2026",
+      "time": "2m ago",
+      "unread": true,
+      "icon": "Sparkles",
+      "iconColor": "bg-primary/10 text-primary",
+      "category": "Launches"
+    },
+    {
+      "id": 2,
+      "type": "PREDICTIONS",
+      "title": "AI Prediction Update: New patent filing suggests Apple is working on AR Glasses",
+      "time": "45m ago",
+      "unread": true,
+      "icon": "Lightbulb",
+      "iconColor": "bg-[#f0f9ff] text-[#0ea5e9]",
+      "category": "Predictions"
+    },
+    {
+      "id": 3,
+      "type": "HYPE ALERT",
+      "title": "Hype Alert: Tesla Smart Home system is trending",
+      "time": "3h ago",
+      "unread": false,
+      "icon": "Zap",
+      "iconColor": "bg-[#fff1f2] text-[#e11d48]",
+      "category": "All"
+    }
+  ]
 }

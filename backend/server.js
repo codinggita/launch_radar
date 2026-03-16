@@ -195,6 +195,10 @@ app.get('/api/admin-console', (req, res) => {
   res.json(fallbackData.adminConsole || { revenueData: [], regions: [], products: [] });
 });
 
+app.get('/api/notifications', (req, res) => {
+  res.json(fallbackData.notifications || []);
+});
+
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();

@@ -9,41 +9,20 @@ import {
   Sparkles
 } from 'lucide-react';
 
-const notifications = [
-  {
-    id: 1,
-    type: 'LAUNCHES',
-    title: 'New Brand Launch: NovaTech just unveiled AI Smart Glasses for 2026',
-    time: '2m ago',
-    unread: true,
-    icon: Sparkles,
-    iconColor: 'bg-primary/10 text-primary',
-    category: 'Launches'
-  },
-  {
-    id: 2,
-    type: 'PREDICTIONS',
-    title: 'AI Prediction Update: New patent filing suggests Apple is working on AR Glasses',
-    time: '45m ago',
-    unread: true,
-    icon: Lightbulb,
-    iconColor: 'bg-[#f0f9ff] text-[#0ea5e9]',
-    category: 'Predictions'
-  },
-  {
-    id: 3,
-    type: 'HYPE ALERT',
-    title: 'Hype Alert: Tesla Smart Home system is trending',
-    time: '3h ago',
-    unread: false,
-    icon: Zap,
-    iconColor: 'bg-[#fff1f2] text-[#e11d48]',
-    category: 'All'
-  }
-];
+const IconMap = {
+  Sparkles, Lightbulb, Zap, TrendingUp, CheckCircle2
+};
 
 const NotificationDropdown = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('All');
+  const [notifications, setNotifications] = React.useState([]);
+
+  React.useEffect(() => {
+    fetch('http://localhost:5000/api/notifications')
+      .then(res => res.json())
+      .then(data => setNotifications(data))
+      .catch(console.error);
+  }, []);
 
   const filteredNotifications = activeTab === 'All' 
     ? notifications 
@@ -106,7 +85,7 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                 <div key={notif.id} className="px-5 py-4 hover:bg-[#f8fafc] cursor-pointer transition-colors relative group">
                   <div className="flex gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.iconColor}`}>
-                      <notif.icon size={18} />
+                      {(() => { const IC = IconMap[notif.icon] || Zap; return <IC size={18} />; })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
