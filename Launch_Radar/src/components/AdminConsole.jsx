@@ -24,6 +24,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
+const IconMap = {
+  Cpu, ShieldCheck, BarChart3, Zap
+};
+
 const StatCard = ({ title, value, trend, icon: Icon, trendColor, index }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -50,25 +54,16 @@ const StatCard = ({ title, value, trend, icon: Icon, trendColor, index }) => (
 
 const AdminConsole = () => {
   const navigate = useNavigate();
-  const data = [
-    { name: 'JAN', value: 2400 }, { name: 'FEB', value: 2100 }, { name: 'MAR', value: 3200 },
-    { name: 'APR', value: 4500 }, { name: 'MAY', value: 2800 }, { name: 'JUN', value: 2400 },
-    { name: 'JUL', value: 4800 }, { name: 'AUG', value: 5200 }, { name: 'SEP', value: 2100 },
-    { name: 'OCT', value: 6200 }, { name: 'NOV', value: 3400 }, { name: 'DEC', value: 7200 }
-  ];
+  const [adminData, setAdminData] = React.useState({ revenueData: [], regions: [], products: [] });
 
-  const regions = [
-    { label: 'North America', percent: 88 },
-    { label: 'Europe', percent: 72 },
-    { label: 'Asia Pacific', percent: 94 },
-    { label: 'Latin America', percent: 45 }
-  ];
-
-  const products = [
-    { name: 'Titan Engine v4', category: 'Core Infrastructure', status: 'ACTIVE', sales: '2,451', revenue: '$42,800', rating: 5, icon: Cpu },
-    { name: 'Cloud Sentinel', category: 'Security Suite', status: 'MAINTENANCE', sales: '1,120', revenue: '$21,340', rating: 4, icon: ShieldCheck },
-    { name: 'Insight Analytics', category: 'Business Intelligence', status: 'ACTIVE', sales: '5,630', revenue: '$94,200', rating: 5, icon: BarChart3 }
-  ];
+  React.useEffect(() => {
+    fetch('http://localhost:5000/api/admin-console')
+      .then(res => res.json())
+      .then(result => {
+        if (result) setAdminData(result);
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -126,7 +121,7 @@ const AdminConsole = () => {
               
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data}>
+                  <AreaChart data={adminData.revenueData}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
@@ -171,7 +166,7 @@ const AdminConsole = () => {
               <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mb-10">Growth by territory</p>
               
               <div className="space-y-8 flex-1">
-                 {regions.map((region, i) => (
+                 {adminData.regions.map((region, i) => (
                    <div key={i}>
                       <div className="flex justify-between items-center mb-3">
                          <span className="text-[11px] font-black text-[#64748b]">{region.label}</span>
@@ -232,12 +227,14 @@ const AdminConsole = () => {
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-[#f1f5f9]">
-                    {products.map((product, i) => (
+                    {adminData.products.map((product, i) => {
+                      const IconComponent = IconMap[product.icon];
+                      return (
                       <tr key={i} className="group hover:bg-slate-50/50 transition-all">
                          <td className="py-8">
                             <div className="flex items-center gap-5">
                                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-[#94a3b8] group-hover:bg-white group-hover:shadow-lg transition-all">
-                                  {product.icon && <product.icon size={28} />}
+                                  {IconComponent && <IconComponent size={28} />}
                                </div>
                                <div>
                                   <h4 className="text-sm font-black text-[#1e293b] mb-1">{product.name}</h4>
@@ -259,13 +256,14 @@ const AdminConsole = () => {
                                ))}
                             </div>
                          </td>
-                         <td className="py-8 text-right">
+                          <td className="py-8 text-right">
                             <button className="p-2 text-[#94a3b8] hover:text-[#1e293b] transition-colors">
                                <MoreHorizontal size={20} />
                             </button>
                          </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                  </tbody>
               </table>
            </div>

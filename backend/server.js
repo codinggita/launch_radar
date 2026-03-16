@@ -183,6 +183,18 @@ app.get('/api/counts', async (req, res) => {
   res.json({ cartCount: 3, notificationsCount: 3 });
 });
 
+app.get('/api/market-intelligence', (req, res) => {
+  res.json(fallbackData.marketIntelligence || { momentumItems: [], distribution: [] });
+});
+
+app.get('/api/brand-intelligence', (req, res) => {
+  res.json(fallbackData.brandIntelligence || { brands: [] });
+});
+
+app.get('/api/admin-console', (req, res) => {
+  res.json(fallbackData.adminConsole || { revenueData: [], regions: [], products: [] });
+});
+
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();

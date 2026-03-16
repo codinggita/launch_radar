@@ -25,10 +25,6 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await fetch(`${API_BASE_URL}/user`);
-        const userData = await userRes.json();
-        setUser(userData);
-
         const countsRes = await fetch(`${API_BASE_URL}/counts`);
         const countsData = await countsRes.json();
         setCartCount(countsData.cartCount);
