@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
 const StartupCard = ({ startup, index }) => {
@@ -50,9 +51,8 @@ const StartupCard = ({ startup, index }) => {
         <motion.div
           whileHover={{ scale: 1.5, rotate: 360 }}
           transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-        >
-          {startup.icon}
-        </motion.div>
+          dangerouslySetInnerHTML={{ __html: startup.icon }}
+        />
       </div>
       <div 
         style={{ transform: "translateZ(30px)" }}
@@ -93,34 +93,18 @@ const StartupCard = ({ startup, index }) => {
 };
 
 const Startups = () => {
-  const startups = [
-    {
-      name: 'NebulaStack',
-      description: 'Decentralized cloud compute platform leveraging unused GPU cycles for AI training.',
-      score: '9.8',
-      tags: ['Cloud Tech', 'Web3'],
-      growth: '+114% MoM Growth',
-      color: '#8b5cf6',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v8"></path><path d="m4.93 4.93 5.66 5.66"></path><path d="M2 12h8"></path><path d="m4.93 19.07 5.66-5.66"></path><path d="M12 22v-8"></path><path d="m19.07 19.07-5.66-5.66"></path><path d="M22 12h-8"></path><path d="m19.07 4.93-5.66 5.66"></path>
-        </svg>
-      )
-    },
-    {
-      name: 'BioSynthetix',
-      description: 'AI-driven molecular modeling for rapid drug discovery and carbon sequestration catalysts.',
-      score: '9.2',
-      tags: ['HealthTech', 'AI'],
-      growth: '+89% Signal Increase',
-      color: '#10b981',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10 2v7.31"></path><path d="M14 9.3V2"></path><path d="M6 14v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4"></path><path d="M18 5.23A2 2 0 0 0 16.15 4H7.85A2 2 0 0 0 6 5.23v.06a2 2 0 0 0 .17.8l1.71 3.42A2 2 0 0 1 8 10.39V15h8v-4.61a2 2 0 0 1 .12-.88l1.71-3.42a2 2 0 0 0 .17-.8Z"></path>
-        </svg>
-      )
-    }
-  ];
+  const [startups, setStartups] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/landing')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.startups) setStartups(data.startups);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (!startups || startups.length === 0) return <section className="py-16 md:py-32 bg-[#f8fafc]" id="predictions"></section>;
 
   return (
     <section className="py-16 md:py-32 bg-[#f8fafc]" id="predictions">

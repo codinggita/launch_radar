@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -11,10 +11,14 @@ import {
   Zap,
   Target,
   BarChart2,
-  Share2,
   ExternalLink
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+
+const IconMap = {
+  Target, Zap, BarChart2
+};
 
 const IntelligenceCard = ({ name, ticker, price, change, sector, logo: Logo, forecast, probability, sentiment }) => {
   return (
@@ -27,7 +31,7 @@ const IntelligenceCard = ({ name, ticker, price, change, sector, logo: Logo, for
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-110 transition-transform">
-            <Logo size={24} className="text-slate-900" />
+            {Logo && <Logo size={24} className="text-slate-900" />}
           </div>
           <div>
             <h3 className="text-xl font-black text-[#1e293b] leading-tight mb-1">{name}</h3>
@@ -105,74 +109,17 @@ const IntelligenceCard = ({ name, ticker, price, change, sector, logo: Logo, for
 };
 
 const BrandIntelligence = () => {
-  const data = [
-    {
-      name: 'Apple Inc.',
-      ticker: 'AAPL',
-      price: '192.42',
-      change: 1.2,
-      sector: 'Consumer Electronics & Software',
-      logo: Target,
-      forecast: 'iPhone 16 Pro & Ultra Vision headset likely in Q3 2024',
-      probability: 88,
-      sentiment: 92
-    },
-    {
-      name: 'Tesla, Inc.',
-      ticker: 'TSLA',
-      price: '174.60',
-      change: -0.8,
-      sector: 'Automotive & Energy',
-      logo: Zap,
-      forecast: 'Model 2 entry-level EV prototype reveal high likelihood in Oct.',
-      probability: 72,
-      sentiment: 68
-    },
-    {
-      name: 'Nike, Inc.',
-      ticker: 'NKE',
-      price: '102.15',
-      change: 0.4,
-      sector: 'Apparel & Footwear',
-      logo: BarChart2,
-      forecast: 'Web3-integrated sneaker drop scheduled for next month.',
-      probability: 95,
-      sentiment: 84
-    },
-    {
-      name: 'Amazon.com',
-      ticker: 'AMZN',
-      price: '180.12',
-      change: 2.4,
-      sector: 'Retail & Cloud Computing',
-      logo: BarChart2,
-      forecast: "New LLM model 'Olympus' expected to be integrated in AWS by Q4.",
-      probability: 90,
-      sentiment: 78
-    },
-    {
-      name: 'Walt Disney Co.',
-      ticker: 'DIS',
-      price: '114.30',
-      change: 0.0,
-      sector: 'Media & Entertainment',
-      logo: Target,
-      forecast: 'Major AI-driven VR attraction patent filed for Magic Kingdom.',
-      probability: 45,
-      sentiment: 62
-    },
-    {
-      name: 'Mercedes-Benz',
-      ticker: 'MBG.DE',
-      price: '75.12',
-      change: 0.9,
-      sector: 'Luxury Automotive',
-      logo: Zap,
-      forecast: 'New solid-state battery tech testing completion in early 2025.',
-      probability: 68,
-      sentiment: 74
-    }
-  ];
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/brand-intelligence')
+      .then(res => res.json())
+      .then(result => {
+        if (result && result.brands) setData(result.brands);
+      })
+      .catch(console.error);
+  }, []);
+
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -209,7 +156,7 @@ const BrandIntelligence = () => {
           <div className="max-w-3xl">
             <h1 className="text-5xl font-black text-[#0f172a] mb-6 tracking-tighter leading-tight">Global Brand Intelligence</h1>
             <p className="text-lg font-medium text-[#64748b] leading-relaxed">
-              Track real-time performance and AI-predicted product cycles for the world's most influential companies.
+              Track real-time performance and AI-predicted product cycles for the world&apos;s most influential companies.
             </p>
           </div>
           <button className="px-8 py-4 bg-white border border-[#e2e8f0] rounded-2xl font-black text-sm text-[#1e293b] flex items-center gap-3 hover:shadow-xl hover:border-primary/20 transition-all active:scale-95 shadow-sm">
@@ -243,11 +190,14 @@ const BrandIntelligence = () => {
 
         {/* Intelligence Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-20 px-1">
-          {data.map((item, index) => (
-            <Link key={item.ticker} to={item.name === 'NeuralEdge AI' || index === 0 ? '/brands/neuraledge' : '#'}>
-              <IntelligenceCard {...item} />
-            </Link>
-          ))}
+          {data.map((item, index) => {
+            const LogoComponent = IconMap[item.logo] || Target;
+            return (
+              <Link key={item.ticker} to={item.name === 'NeuralEdge AI' || index === 0 ? '/brands/neuraledge' : '#'}>
+                <IntelligenceCard {...item} logo={LogoComponent} />
+              </Link>
+            );
+          })}
         </div>
 
         {/* Load More Area */}

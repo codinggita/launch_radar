@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { 
   BarChart3, 
   TrendingUp, 
-  TrendingDown, 
   Users, 
   ShoppingBag, 
   DollarSign, 
@@ -12,17 +11,19 @@ import {
   MoreHorizontal, 
   Plus, 
   Filter,
-  Globe,
   ArrowUpRight,
   ArrowDownRight,
-  Monitor,
   Cpu,
   ShieldCheck,
   Zap
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+
+const IconMap = {
+  Cpu, ShieldCheck, BarChart3, Zap
+};
 
 const StatCard = ({ title, value, trend, icon: Icon, trendColor, index }) => (
   <motion.div
@@ -49,26 +50,53 @@ const StatCard = ({ title, value, trend, icon: Icon, trendColor, index }) => (
 );
 
 const AdminConsole = () => {
-  const navigate = useNavigate();
-  const data = [
-    { name: 'JAN', value: 2400 }, { name: 'FEB', value: 2100 }, { name: 'MAR', value: 3200 },
-    { name: 'APR', value: 4500 }, { name: 'MAY', value: 2800 }, { name: 'JUN', value: 2400 },
-    { name: 'JUL', value: 4800 }, { name: 'AUG', value: 5200 }, { name: 'SEP', value: 2100 },
-    { name: 'OCT', value: 6200 }, { name: 'NOV', value: 3400 }, { name: 'DEC', value: 7200 }
-  ];
+  const [adminData, setAdminData] = useState({ revenueData: [], regions: [], products: [] });
+  const [users, setUsers] = useState([]);
+  const [adminStats, setAdminStats] = useState({ totalUsers: 0, totalProducts: 0, activeUsers: 0, revenue: '...' });
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const regions = [
-    { label: 'North America', percent: 88 },
-    { label: 'Europe', percent: 72 },
-    { label: 'Asia Pacific', percent: 94 },
-    { label: 'Latin America', percent: 45 }
-  ];
+  useEffect(() => {
+    fetch('http://localhost:5000/api/admin-console')
+      .then(res => res.json())
+      .then(result => { if (result) setAdminData(result); })
+      .catch(console.error);
+    
+    fetch('http://localhost:5000/api/admin/stats')
+      .then(res => res.json())
+      .then(data => setAdminStats(data))
+      .catch(console.error);
+  }, []);
 
-  const products = [
-    { name: 'Titan Engine v4', category: 'Core Infrastructure', status: 'ACTIVE', sales: '2,451', revenue: '$42,800', rating: 5, icon: Cpu },
-    { name: 'Cloud Sentinel', category: 'Security Suite', status: 'MAINTENANCE', sales: '1,120', revenue: '$21,340', rating: 4, icon: ShieldCheck },
-    { name: 'Insight Analytics', category: 'Business Intelligence', status: 'ACTIVE', sales: '5,630', revenue: '$94,200', rating: 5, icon: BarChart3 }
-  ];
+  const loadUsers = useCallback(() => {
+    fetch('http://localhost:5000/api/admin/users')
+      .then(res => res.json())
+      .then(data => setUsers(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users') loadUsers();
+  }, [activeTab, loadUsers]);
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await fetch(`http://localhost:5000/api/admin/users/${id}`, { method: 'DELETE' });
+      setUsers(u => u.filter(usr => String(usr.id) !== String(id)));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleChangePlan = async (id, plan) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan })
+      });
+      const updated = await res.json();
+      setUsers(u => u.map(usr => String(usr.id) === String(id) ? { ...usr, plan: updated.plan } : usr));
+    } catch (e) { console.error(e); }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -97,13 +125,95 @@ const AdminConsole = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 px-2">
-          <StatCard title="Total Earnings" value="$128,430.00" trend="+12.5%" icon={DollarSign} trendColor="green" index={0} />
-          <StatCard title="Net Loss" value="-$4,210.50" trend="-2.1%" icon={TrendingDown} trendColor="red" index={1} />
-          <StatCard title="Active Orders" value="1,240" trend="+8.4%" icon={ShoppingBag} trendColor="green" index={2} />
-          <StatCard title="Total Users" value="45.2k" trend="+4.2%" icon={Users} trendColor="green" index={3} />
+          <StatCard title="Total Earnings" value={adminStats.revenue} trend="+12.5%" icon={DollarSign} trendColor="green" index={0} />
+          <StatCard title="Total Users" value={String(adminStats.totalUsers)} trend="+4.2%" icon={Users} trendColor="green" index={1} />
+          <StatCard title="Active Users" value={String(adminStats.activeUsers)} trend="+8.4%" icon={ShoppingBag} trendColor="green" index={2} />
+          <StatCard title="Total Products" value={String(adminStats.totalProducts)} trend="+2.1%" icon={TrendingUp} trendColor="green" index={3} />
         </div>
 
-        {/* Charts Section */}
+        {/* Tab Navigation */}
+        <div className="flex gap-4 border-b border-[#f1f5f9] mb-12 px-2">
+          {[['overview', 'Overview'], ['users', 'User Management'], ['products', 'Products']].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`pb-4 px-2 text-[11px] font-black uppercase tracking-widest transition-all relative ${
+                activeTab === key ? 'text-primary' : 'text-[#94a3b8] hover:text-[#1e293b]'
+              }`}
+            >
+              {label}
+              {activeTab === key && (
+                <motion.div layoutId="adminTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Users Management Tab */}
+        {activeTab === 'users' && (
+          <div className="px-2 pb-20">
+            <div className="bg-white rounded-[40px] border border-[#eef2f6] shadow-sm overflow-hidden">
+              <div className="p-8 flex justify-between items-center border-b border-[#f1f5f9]">
+                <h3 className="text-xl font-black text-[#1e293b] tracking-tight">Registered Users</h3>
+                <span className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">{users.length} total</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#f1f5f9]">
+                      {['User', 'Email', 'Plan', 'Joined', 'Actions'].map(h => (
+                        <th key={h} className="px-8 py-4 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.length === 0 ? (
+                      <tr><td colSpan={5} className="px-8 py-12 text-center text-[#94a3b8] font-bold text-sm">No users found. Users will appear here after they sign up.</td></tr>
+                    ) : users.map((u, i) => (
+                      <tr key={u.id || i} className="border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-colors">
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
+                              {(u.name || '?')[0].toUpperCase()}
+                            </div>
+                            <span className="font-bold text-sm text-[#1e293b]">{u.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-sm font-medium text-[#64748b]">{u.email}</td>
+                        <td className="px-8 py-5">
+                          <select
+                            value={u.plan || 'Free Tier'}
+                            onChange={e => handleChangePlan(u.id, e.target.value)}
+                            className="px-3 py-1.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-lg text-[10px] font-black text-[#1e293b] cursor-pointer"
+                          >
+                            {['Free Tier', 'Pro Plan', 'Enterprise', 'Free Tier (Local)'].map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-8 py-5 text-xs font-medium text-[#94a3b8]">
+                          {u.created_at ? new Date(u.created_at).toLocaleDateString() : 'Local'}
+                        </td>
+                        <td className="px-8 py-5">
+                          <button
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="px-4 py-2 text-rose-500 border border-rose-100 bg-rose-50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Charts Section (overview + products tabs) */}
+        {activeTab !== 'users' && (<>
+
         <div className="flex gap-8 mb-12 px-2">
            {/* Revenue Chart */}
            <motion.div 
@@ -126,7 +236,7 @@ const AdminConsole = () => {
               
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data}>
+                  <AreaChart data={adminData.revenueData}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
@@ -171,7 +281,7 @@ const AdminConsole = () => {
               <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mb-10">Growth by territory</p>
               
               <div className="space-y-8 flex-1">
-                 {regions.map((region, i) => (
+                 {adminData.regions.map((region, i) => (
                    <div key={i}>
                       <div className="flex justify-between items-center mb-3">
                          <span className="text-[11px] font-black text-[#64748b]">{region.label}</span>
@@ -232,12 +342,14 @@ const AdminConsole = () => {
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-[#f1f5f9]">
-                    {products.map((product, i) => (
+                    {adminData.products.map((product, i) => {
+                      const IconComponent = IconMap[product.icon];
+                      return (
                       <tr key={i} className="group hover:bg-slate-50/50 transition-all">
                          <td className="py-8">
                             <div className="flex items-center gap-5">
                                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-[#94a3b8] group-hover:bg-white group-hover:shadow-lg transition-all">
-                                  {product.icon && <product.icon size={28} />}
+                                  {IconComponent && <IconComponent size={28} />}
                                </div>
                                <div>
                                   <h4 className="text-sm font-black text-[#1e293b] mb-1">{product.name}</h4>
@@ -259,17 +371,19 @@ const AdminConsole = () => {
                                ))}
                             </div>
                          </td>
-                         <td className="py-8 text-right">
+                          <td className="py-8 text-right">
                             <button className="p-2 text-[#94a3b8] hover:text-[#1e293b] transition-colors">
                                <MoreHorizontal size={20} />
                             </button>
                          </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                  </tbody>
               </table>
            </div>
         </motion.div>
+        </>)}
 
         {/* Floating Mini Profile (as seen in screenshot) */}
         <div className="fixed bottom-12 left-6 w-52 z-50">

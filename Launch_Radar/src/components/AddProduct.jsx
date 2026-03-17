@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, 
-  ChevronLeft, 
   Info, 
   UploadCloud, 
   Trash2, 
@@ -11,10 +10,8 @@ import {
   Zap, 
   FileText, 
   Tag as TagIcon, 
-  Globe, 
-  ShieldCheck,
-  MoreVertical,
-  X
+  X,
+  Monitor
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -25,6 +22,18 @@ const AddProduct = () => {
   const [tags, setTags] = useState(['Innovation', 'AI']);
   const [tagInput, setTagInput] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'Hardware',
+    price: '',
+    description: '',
+    year: '2024'
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -39,12 +48,45 @@ const AddProduct = () => {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsPublishing(true);
-    setTimeout(() => {
+    try {
+      const newProduct = {
+        ...formData,
+        type: formData.category === 'SaaS' ? 'Productivity' : 'Interface', // Mocked type
+        tag: 'New',
+        tagClass: 'bg-primary shadow-lg shadow-primary/30',
+        bgClass: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+        rating: 5.0,
+        reviews: 0,
+        demand: 100,
+        specs: [
+          { label: 'New Tech' }
+        ],
+        tags: tags
+      };
+
+      const response = await fetch('http://localhost:5000/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newProduct)
+      });
+
+      if (response.ok) {
+        setTimeout(() => {
+          setIsPublishing(false);
+          navigate('/admin');
+        }, 2000);
+      } else {
+        throw new Error('Failed to publish product');
+      }
+    } catch (error) {
+      console.error('Error publishing product:', error);
       setIsPublishing(false);
-      navigate('/admin');
-    }, 2000);
+      alert('Failed to publish product');
+    }
   };
 
   return (
@@ -97,33 +139,43 @@ const AddProduct = () => {
               <div className="space-y-8">
                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-[#1e293b] uppercase tracking-widest">Product Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. VisionPro Max Gen 2" 
-                      className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner" 
-                    />
+                     <input 
+                       type="text" 
+                       name="name"
+                       value={formData.name}
+                       onChange={handleInputChange}
+                       placeholder="e.g. VisionPro Max Gen 2" 
+                       className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner" 
+                     />
                  </div>
 
                  <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-3">
                        <label className="text-[10px] font-black text-[#1e293b] uppercase tracking-widest">Category</label>
-                       <div className="relative">
-                          <select className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] appearance-none focus:outline-none focus:ring-4 focus:ring-primary/5 shadow-inner">
-                             <option>Select a category</option>
-                             <option>Hardware</option>
-                             <option>SaaS</option>
-                             <option>AI Models</option>
+                        <div className="relative">
+                          <select 
+                            name="category"
+                            value={formData.category}
+                            onChange={handleInputChange}
+                            className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] appearance-none focus:outline-none focus:ring-4 focus:ring-primary/5 shadow-inner"
+                          >
+                             <option value="Hardware">Hardware</option>
+                             <option value="SaaS">SaaS</option>
+                             <option value="AI Models">AI Models</option>
                           </select>
                           <ChevronDown size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
                        </div>
                     </div>
                     <div className="space-y-3">
                        <label className="text-[10px] font-black text-[#1e293b] uppercase tracking-widest">Estimated Price ($)</label>
-                       <input 
-                         type="text" 
-                         placeholder="299.00" 
-                         className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner" 
-                       />
+                        <input 
+                          type="text" 
+                          name="price"
+                          value={formData.price}
+                          onChange={handleInputChange}
+                          placeholder="299.00" 
+                          className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner" 
+                        />
                     </div>
                  </div>
               </div>
@@ -146,20 +198,28 @@ const AddProduct = () => {
               <div className="space-y-8">
                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-[#1e293b] uppercase tracking-widest">Description</label>
-                    <textarea 
-                      placeholder="Tell the world what makes this product unique..." 
-                      className="w-full h-40 px-8 py-6 bg-[#f8fafc] border border-[#e2e8f0] rounded-3xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner resize-none" 
-                    />
+                     <textarea 
+                       name="description"
+                       value={formData.description}
+                       onChange={handleInputChange}
+                       placeholder="Tell the world what makes this product unique..." 
+                       className="w-full h-40 px-8 py-6 bg-[#f8fafc] border border-[#e2e8f0] rounded-3xl text-sm font-bold text-[#1e293b] focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-inner resize-none" 
+                     />
                  </div>
 
                  <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-3">
                        <label className="text-[10px] font-black text-[#1e293b] uppercase tracking-widest">Launch Year</label>
-                       <div className="relative">
-                          <select className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] appearance-none focus:outline-none focus:ring-4 focus:ring-primary/5 shadow-inner">
-                             <option>2024</option>
-                             <option>2025</option>
-                             <option>2026</option>
+                        <div className="relative">
+                          <select 
+                            name="year"
+                            value={formData.year}
+                            onChange={handleInputChange}
+                            className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] appearance-none focus:outline-none focus:ring-4 focus:ring-primary/5 shadow-inner"
+                          >
+                             <option value="2024">2024</option>
+                             <option value="2025">2025</option>
+                             <option value="2026">2026</option>
                           </select>
                           <ChevronDown size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
                        </div>

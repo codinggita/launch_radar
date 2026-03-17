@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
 const StepCard = ({ step, index }) => {
@@ -49,9 +49,9 @@ const StepCard = ({ step, index }) => {
         whileHover={{ scale: 1.2, rotate: 15 }}
         transition={{ type: 'spring', stiffness: 300, damping: 10 }}
         className="w-12 h-12 bg-blue-50 text-primary flex items-center justify-center rounded-xl mb-8 group-hover:bg-primary group-hover:text-white"
-      >
-        {step.icon}
-      </motion.div>
+        dangerouslySetInnerHTML={{ __html: step.icon }}
+      />
+
       <div style={{ transform: "translateZ(30px)" }}>
         <h3 className="text-xl mb-4 font-bold">{step.title}</h3>
         <p className="text-text-muted text-[0.95rem] leading-relaxed">{step.description}</p>
@@ -61,35 +61,18 @@ const StepCard = ({ step, index }) => {
 };
 
 const Process = () => {
-  const steps = [
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-        </svg>
-      ),
-      title: 'Multi-Source Ingestion',
-      description: 'We monitor GitHub activity, job board trends, social sentiment, and domain registrations in real-time.'
-    },
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="7" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="17"></line><line x1="17" y1="12" x2="22" y2="12"></line><line x1="2" y1="12" x2="7" y2="12"></line>
-        </svg>
-      ),
-      title: 'Pattern Recognition',
-      description: 'Our AI identifies patterns common in historic unicorns, such as velocity of engineer hiring and open-source momentum.'
-    },
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>
-        </svg>
-      ),
-      title: 'Predictive Ranking',
-      description: 'Every startup gets a dynamic Radar Score. High-velocity movers are flagged to you instantly via custom alerts.'
-    }
-  ];
+  const [steps, setSteps] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/landing')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.process) setSteps(data.process);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (!steps || steps.length === 0) return <section className="py-20 md:py-32" id="how"></section>;
 
   return (
     <section className="py-20 md:py-32" id="how">
@@ -102,7 +85,7 @@ const Process = () => {
           className="text-center mb-16 md:mb-20"
         >
           <h2 className="text-3xl md:text-[2.5rem] font-bold mb-4 leading-tight">How our prediction engine works</h2>
-          <p className="text-text-muted text-lg md:text-xl max-w-[700px] mx-auto">We process millions of technical and social data points to identify the "signal" within the noise.</p>
+          <p className="text-text-muted text-lg md:text-xl max-w-[700px] mx-auto">We process millions of technical and social data points to identify the &quot;signal&quot; within the noise.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {steps.map((step, index) => (

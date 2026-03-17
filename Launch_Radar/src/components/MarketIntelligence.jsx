@@ -1,27 +1,24 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Search, 
   HelpCircle, 
-  Bell, 
   Zap, 
   TrendingUp, 
-  TrendingDown, 
   Target, 
-  BarChart2, 
   Cpu, 
-  ShieldCheck,
-  ChevronRight,
   Plus,
   RefreshCw,
   FileText,
-  Briefcase,
   Globe,
-  Mail,
-  MoreHorizontal
+  Mail
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+
+const IconMap = {
+  FileText, Target, Globe
+};
 
 const Bot = ({ size, className }) => (
   <svg 
@@ -45,7 +42,7 @@ const Bot = ({ size, className }) => (
   </svg>
 );
 
-const SectorPerformanceCard = ({ name, icon: Icon, percentage, trend, values }) => {
+const SectorPerformanceCard = ({ name, icon: Icon, percentage, values }) => {
   return (
     <motion.div 
       whileHover={{ y: -5 }}
@@ -84,37 +81,16 @@ const SectorPerformanceCard = ({ name, icon: Icon, percentage, trend, values }) 
 
 const MarketIntelligence = () => {
   const [email, setEmail] = useState('');
+  const [marketData, setMarketData] = useState({ momentumItems: [], distribution: [] });
 
-  const momentumItems = [
-    {
-      icon: FileText,
-      iconColor: 'bg-blue-50 text-blue-500',
-      title: 'New Quantum patent filing by SynapCore Ltd.',
-      time: '2m ago',
-      category: 'Patents'
-    },
-    {
-      icon: Briefcase,
-      iconColor: 'bg-indigo-50 text-indigo-500',
-      title: 'Lucid Dynamics acquires AI startup \'Nodal\'.',
-      time: '15m ago',
-      category: 'M&A'
-    },
-    {
-      icon: Target,
-      iconColor: 'bg-orange-50 text-orange-500',
-      title: 'Series C funding closed for GreenGrid Energy.',
-      time: '1h ago',
-      category: 'Venture'
-    },
-    {
-      icon: Globe,
-      iconColor: 'bg-emerald-50 text-emerald-500',
-      title: 'EU Regulatory update on semi-conductors.',
-      time: '3h ago',
-      category: 'Policy'
-    }
-  ];
+  useEffect(() => {
+    fetch('http://localhost:5000/api/market-intelligence')
+      .then(res => res.json())
+      .then(data => setMarketData(data))
+      .catch(console.error);
+  }, []);
+
+
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -195,17 +171,20 @@ const MarketIntelligence = () => {
             </div>
 
             <div className="space-y-8">
-              {momentumItems.map((item, idx) => (
-                <div key={idx} className="flex gap-6 group cursor-pointer">
-                  <div className={`w-12 h-12 rounded-2xl ${item.iconColor} flex items-center justify-center shrink-0 border border-current opacity-70 group-hover:opacity-100 transition-opacity`}>
-                    <item.icon size={22} />
+              {marketData.momentumItems.map((item, idx) => {
+                const IconComponent = IconMap[item.icon] || FileText;
+                return (
+                  <div key={idx} className="flex gap-6 group cursor-pointer">
+                    <div className={`w-12 h-12 rounded-2xl ${item.iconColor} flex items-center justify-center shrink-0 border border-current opacity-70 group-hover:opacity-100 transition-opacity`}>
+                      <IconComponent size={22} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-[#1e293b] leading-relaxed mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
+                      <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">{item.time} • {item.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-[#1e293b] leading-relaxed mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
-                    <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">{item.time} • {item.category}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -263,11 +242,7 @@ const MarketIntelligence = () => {
             <div className="flex-1">
               <h3 className="text-2xl font-black text-[#1e293b] mb-6">Market Distribution</h3>
               <div className="space-y-4">
-                 {[
-                   { label: 'Software', val: 42, color: 'bg-blue-600' },
-                   { label: 'Hardware', val: 23, color: 'bg-blue-400' },
-                   { label: 'Services', val: 35, color: 'bg-blue-200' }
-                 ].map((d, i) => (
+                 {marketData.distribution.length > 0 ? marketData.distribution.map((d, i) => (
                    <div key={i} className="flex justify-between items-center text-sm font-bold text-[#64748b]">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${d.color}`} />
@@ -275,7 +250,9 @@ const MarketIntelligence = () => {
                       </div>
                       <span className="text-[#1e293b] font-black">{d.val}%</span>
                    </div>
-                 ))}
+                 )) : (
+                   <div className="text-sm text-slate-400">Loading distribution...</div>
+                 )}
               </div>
             </div>
           </div>

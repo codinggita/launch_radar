@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -10,15 +10,11 @@ import {
   Edit3, 
   Camera, 
   Search,
-  ChevronRight,
-  CreditCard,
-  Trash2,
   Zap,
-  Info,
-  CheckCircle2,
-  ExternalLink
+  CheckCircle2
 } from 'lucide-react';
 import Sidebar from './Sidebar';
+import { useApp } from '../context/AppContext';
 
 const TabButton = ({ label, icon: Icon, isActive, onClick }) => (
   <button 
@@ -38,6 +34,7 @@ const TabButton = ({ label, icon: Icon, isActive, onClick }) => (
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('Account');
+  const { user } = useApp();
   
   const tabs = [
     { label: 'Account', icon: User },
@@ -70,7 +67,7 @@ const Settings = () => {
                 <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full" />
              </button>
              <div className="w-10 h-10 bg-indigo-100 rounded-xl overflow-hidden border-2 border-white shadow-md">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=48&h=48&q=80" alt="User" />
+                <img src={user?.avatar || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} alt="User" />
              </div>
           </div>
         </header>
@@ -84,7 +81,7 @@ const Settings = () => {
            <div className="flex items-center gap-10">
               <div className="relative">
                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=128&h=128&q=80" alt="Avatar" />
+                    <img src={user?.avatar || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} alt="Avatar" />
                  </div>
                  <button className="absolute bottom-1 right-1 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center border-4 border-white shadow-lg shadow-primary/30 hover:scale-110 transition-all">
                     <Camera size={18} />
@@ -92,14 +89,14 @@ const Settings = () => {
               </div>
               <div>
                  <div className="flex items-center gap-4 mb-2">
-                    <h2 className="text-3xl font-black text-[#1e293b] tracking-tight">Alex Rivers</h2>
+                    <h2 className="text-3xl font-black text-[#1e293b] tracking-tight">{user?.name || 'Your Name'}</h2>
                     <CheckCircle2 size={24} className="text-primary fill-primary/10" />
                  </div>
                  <div className="flex items-center gap-6 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest italic">
                     <span className="flex items-center gap-2 text-primary">
-                       <Zap size={14} className="fill-current" /> Pro Plan Member
+                       <Zap size={14} className="fill-current" /> {user?.plan || 'Free Tier'}
                     </span>
-                    <span>• Since Jan 2023</span>
+                    <span>â€¢ Since Jan 2023</span>
                  </div>
               </div>
            </div>
@@ -140,11 +137,11 @@ const Settings = () => {
               <div className="grid grid-cols-2 gap-x-12 gap-y-10">
                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Full Name</label>
-                    <input type="text" value="Alex Rivers" className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none shadow-inner" />
+                    <input type="text" defaultValue={user?.name || ''} className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none shadow-inner" />
                  </div>
                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Email Address</label>
-                    <input type="email" value="alex.rivers@example.com" className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none shadow-inner" />
+                    <input type="email" defaultValue={user?.email || ''} className="w-full px-8 py-5 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl text-sm font-bold text-[#1e293b] focus:outline-none shadow-inner" />
                  </div>
                  <div className="space-y-3">
                     <label className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Job Title</label>
@@ -216,7 +213,7 @@ const Settings = () => {
            {/* Footer info */}
            <footer className="pt-12 flex flex-col items-center">
               <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.2em] mb-4">
-                 LaunchRadar v2.4.1 • © 2024 LaunchRadar Inc. All rights reserved.
+                 LaunchRadar v2.4.1 â€¢ Â© 2024 LaunchRadar Inc. All rights reserved.
               </p>
               <div className="flex gap-8 text-[10px] font-black text-primary uppercase tracking-widest italic">
                  <button className="hover:underline">Privacy Policy</button>
@@ -248,3 +245,5 @@ const Settings = () => {
 };
 
 export default Settings;
+
+
